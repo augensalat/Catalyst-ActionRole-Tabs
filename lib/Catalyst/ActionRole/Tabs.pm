@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use Catalyst::Exception;
 
-our $VERSION = '0.001000';
+our $VERSION = '0.001001';
 
 =head1 NAME
 
@@ -86,7 +86,9 @@ Assign a Tab to the action. The optional argument specifies the label text.
 Without an explicite label text the action name is used, with the first
 letter uppercased and the rest lowercased.
 
-=head2 TabAlias(aliasaction)
+=head2 TabAlias
+
+  TabAlias(Aliasaction)
 
 In some cases it is usefull to assign one tab to many actions. E.g. an
 action with a form to update some data, might be called initially as
@@ -293,9 +295,9 @@ If method C<BUILD_TABS()> exists in the controller class, it is called as
 else the tabs hash as described in L</execute> is stored at
 C<< $c->stash->{tabs} >>.
 
-C<BUILD_TABS()> has to store the tabs data wherever appropriate.
-It can also be used to convert the incomig hash into an array with the
-desired order of tabs. Finally is is a place to apply further
+If it exists C<BUILD_TABS()> has to store the tabs data wherever
+appropriate. It can also be used to convert the incomig hash into an array
+with the desired order of tabs. Finally is is a place to apply further
 modifications to the tabs, like adding or removing tabs.
 
 Here is an example for a C<BUILD_TABS()>, that turns tab data into an
@@ -317,9 +319,9 @@ name C<tab_navigation>:
 
 =head1 SAMPLE CSS
 
-Here is some CSS that works with the template included in the synopsis.  It's
-probably not exactly what you need, but it should give a decent starting
-point...
+Here is some CSS that works with the template included in the synopsis.
+It's probably not exactly what you need, but it should give a decent
+starting point...
 
   ul.tabs {
     text-align: left;
