@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use Catalyst::Exception;
 
-our $VERSION = '0.001001';
+our $VERSION = '0.002000';
 
 =head1 NAME
 
@@ -47,7 +47,7 @@ Catalyst::ActionRole::Tabs - Add tabs to Catalyst controller actions
   [% # Assuming tab_navigation to be an array reference %]
   [% # See below under CALLBACK METHODS %]
   [% # For applicable CSS see below under SAMPLE CSS -%]
-  <ul>
+  <ul class="tabs">
   [% FOR tab IN tab_navigation %]
       <li[% IF tab.selected %] class="selected"[% END %]>
           <a href="[% tab.uri %]">[% tab.label %]</a>
@@ -106,6 +106,9 @@ C<edit>:
   sub update : Local Does(Tabs) TabAlias(edit) { ... }
 
 =head1 METHODS
+
+Normaly you never have to touch the following two methods.
+They are documented here to reveal their purpose.
 
 =head2 BUILD
 
@@ -205,6 +208,17 @@ A dump of the controller's tab hash might look like this:
     },
   }
 
+=head3 Compatibility notice:
+
+In the first public release of this module query parameters from the current
+request were appended to the tab URIs. The idea behind it was to easily
+pass a session id. This turned out to be a bad idea, because all kinds of
+paramaters were passed to pages, where they might introduce complications.
+Therefore beginning with this release no query parameters are appended to
+the tab URIs automatically, and the desired query parameters must be passed
+manually in the L</BUILD_TABS> callback method.
+See L<below|/BUILD_TABS> how this can be done.
+
 =cut
 
 before execute => sub {
@@ -215,7 +229,6 @@ before execute => sub {
     my $request = $c->request;
     my $request_captures = $request->captures;
     my $request_arguments = $request->arguments;
-    my $request_query_params = $request->query_params;
     my ($name, $action, $alias, $attrs, $tab, $uri, $selected, $has_selected);
     my (%t, %ta, %tabs);
 
@@ -249,8 +262,7 @@ before execute => sub {
 	$uri = $c->uri_for(
 	    $dispatcher->get_action($_, $namespace),
 	    $request_captures,
-	    @$request_arguments,
-	    $request_query_params
+	    @$request_arguments
 	)
 	    or next;
 	$selected = $action_name eq $_
@@ -300,17 +312,28 @@ appropriate. It can also be used to convert the incomig hash into an array
 with the desired order of tabs. Finally is is a place to apply further
 modifications to the tabs, like adding or removing tabs.
 
-Here is an example for a C<BUILD_TABS()>, that turns tab data into an
-array with the desired order and then stores it onto the stash under the
-name C<tab_navigation>:
+Here is an example for a C<BUILD_TABS()>. It
+
+=over
+
+=item * turns tab data into an array with the desired order;
+
+=item * adds the query parameter C<session_id> to all tab urls;
+
+=item * stores it onto the stash under the name C<tab_navigation>:
+
+=back
 
   sub BUILD_TABS {
     my ($self, $c, $tabs) = @_;
     my (@tabs, $tab);
+    my $session_id = $c->request->param('session_id');
 
     for (qw(browse add view edit remove)) {
-      $tab = $tabs->{$_}
-        and push @tabs, $tab;
+      $tab = $tabs->{$_} or next;
+      $tab->{uri}->query("session_id=$session_id")
+        if $session_id;
+      push @tabs, $tab;
     }
 
     $c->stash->{tab_navigation} = \@tabs;

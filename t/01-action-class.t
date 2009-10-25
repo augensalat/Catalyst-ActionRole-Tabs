@@ -40,7 +40,7 @@ is_deeply(
     'tab data generated successfully'
 );
 
-$query = '/edit?id=42';
+$query = '/edit?id=42&other=foo';
 ($resp, $c) = ctx_request($query);
 ok($resp->header('status') == 200, "fetch $query 200 OK");
 is($resp->content, 'action: edit', "content correct");

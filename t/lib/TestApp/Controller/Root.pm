@@ -82,8 +82,9 @@ sub BUILD_TABS {
     my @action_names = $id ? qw(view edit remove) : qw(browse add);
 
     for (@action_names) {
-      $tab = $tabs->{$_}
-        and push @tabs, $tab;
+	$tab = $tabs->{$_} or next;
+	$tab->{uri}->query("id=$id") if $id;
+	push @tabs, $tab;
     }
 
     $c->stash->{tabs} = \@tabs;
