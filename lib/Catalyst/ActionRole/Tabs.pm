@@ -5,7 +5,7 @@ use namespace::autoclean;
 
 use Catalyst::Exception;
 
-our $VERSION = '0.002000';
+our $VERSION = '0.003000';
 
 =head1 NAME
 
@@ -234,19 +234,13 @@ before execute => sub {
 
     for my $container ($dispatcher->get_containers($namespace)) {
 	while (($name, $action) = each %{$container->actions}) {
-
 	    next
 		unless $action->namespace eq $namespace;
-
-	    # if $action Does(ACL)
-	    next
-		if $action->does('Catalyst::ActionRole::ACL')
-		    and not $action->can_visit($c);
 
 	    $attrs = $action->attributes;
 
 	    if (defined($tab = $attrs->{Tab})) {
-		$t{$name} = $tab->[0] || ucfirst(lc $name);
+		$t{$name} = [$action, $tab->[0] || ucfirst(lc $name)];
 	    }
 	    elsif (defined($tab = $attrs->{TabAlias})) {
 		$ta{$name} = $tab->[0];
@@ -256,20 +250,25 @@ before execute => sub {
 	    }
 	}
     }
-
     for (keys %t) {
+	($action, $name) = @{$t{$_}};
 	# get all URIs for the current namespace and request captures
 	$uri = $c->uri_for(
-	    $dispatcher->get_action($_, $namespace),
+	    $action,
 	    $request_captures,
 	    @$request_arguments
 	)
 	    or next;
+	# if $action Does(ACL)
+	next
+	    if $action->does('Catalyst::ActionRole::ACL')
+		and not $action->can_visit($c);
+
 	$selected = $action_name eq $_
 	    and $has_selected = 1;
 	$tabs{$_} = {
 	    name => $_,
-	    label => $t{$_},
+	    label => $name,
 	    selected => $selected,
 	    uri => $uri,
 	};
