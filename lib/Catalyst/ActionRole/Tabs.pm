@@ -15,7 +15,7 @@ Catalyst::ActionRole::Tabs - Add tabs to Catalyst controller actions
 
   package MyApp::Controller::Foo;
 
-  use Moose::Role;
+  use Moose;
   use namespace::autoclean;
 
   BEGIN { extends 'Catalyst::Controller::ActionRole' }
